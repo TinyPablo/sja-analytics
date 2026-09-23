@@ -1,0 +1,44 @@
+# Production stack: nginx serves the built SPA and proxies /api to uvicorn.
+# The global Caddy runs on the host and reverse-proxies the published port
+# below, terminating TLS and owning the public domain.
+# See deploy/Caddyfile.snippet.
+
+services:
+  nginx:
+    build:
+      context: .
+      dockerfile: ./apps/web/Dockerfile
+      target: prod
+    container_name: sja-analytics-nginx
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      # Bound to loopback only - the host Caddy is the sole way in.
+      - "127.0.0.1:8300:80"
+
+  api:
+    build:
+      context: ./apps/api
+      target: prod
+    container_name: sja-analytics-api
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      APP_ENV: prod
+      DATABASE_URL: sqlite:////app/data/sja.db
+    volumes:
+      - sja-data:/app/data
+    expose:
+      - "8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health', timeout=3)"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 5s
+
+volumes:
+  sja-data:
