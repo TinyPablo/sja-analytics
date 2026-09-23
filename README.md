@@ -9,13 +9,13 @@ logic exists yet.
 
 ## Stack
 
-| Layer      | Choice                                                        |
-| ---------- | ------------------------------------------------------------- |
-| Frontend   | React 19 + TypeScript, Vite, React Router, TanStack Query     |
-| Styling    | Tailwind CSS v4 + shadcn/ui                                   |
-| Backend    | FastAPI, SQLAlchemy 2.0 (sync), Alembic, managed by `uv`      |
-| Database   | SQLite on a Docker volume                                     |
-| Front door | nginx in every environment; global Caddy handles domain + TLS |
+| Layer      | Choice                                                          |
+| ---------- | --------------------------------------------------------------- |
+| Frontend   | React 19 + TypeScript, Vite, React Router, TanStack Query       |
+| Styling    | Tailwind CSS v4 + shadcn/ui                                     |
+| Backend    | FastAPI, SQLAlchemy 2.0 (sync), Alembic, managed by `uv`        |
+| Database   | SQLite on a Docker volume                                       |
+| Front door | nginx in every environment; Cloudflare Tunnel for public access |
 
 ## Layout
 
@@ -27,7 +27,7 @@ packages/
   api-types/    TS types generated from the API's OpenAPI schema
 deploy/
   nginx/        dev.conf and prod.conf
-  Caddyfile.snippet
+  cloudflared-ingress.md
 data/           SQLite file and uploaded Unity scenes (git-ignored volume)
 ```
 
@@ -39,7 +39,9 @@ make dev-build          # first run
 open http://localhost:8300
 ```
 
-`make help` lists everything else. The dev stack bind-mounts sources, so
+`make help` lists everything else. For the server see [DEPLOY.md](DEPLOY.md).
+
+The dev stack bind-mounts sources, so
 uvicorn reloads and Vite HMR both work through nginx, published on host
 port 8300.
 
@@ -54,6 +56,8 @@ port 8300.
   the payload stays constant regardless of how many deaths were recorded.
 - **Pydantic models are the contract.** `packages/api-types` is generated from
   the OpenAPI schema; never edit `src/schema.ts` by hand.
+- **Production is loopback-only.** nginx publishes on `127.0.0.1:8300` and a
+  Cloudflare Tunnel is the sole public entry point.
 
 ## Not built yet
 

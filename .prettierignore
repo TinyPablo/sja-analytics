@@ -2,3 +2,5 @@ node_modules/
 dist/
 data/
 packages/api-types/src/schema.ts
+docker-compose.yml
+docker-compose.prod.yml

@@ -62,9 +62,25 @@ fmt: ## Format python and web sources
 prod: .env ## Build and start the production stack on 127.0.0.1:8300
 	$(COMPOSE_PROD) up -d --build
 
+.PHONY: deploy
+deploy: .env ## Pull the checked-out branch and redeploy (run on the server)
+	git pull --ff-only
+	$(COMPOSE_PROD) up -d --build
+	@echo "--- waiting for api to report healthy ---"
+	@until [ "$$(docker inspect -f '{{.State.Health.Status}}' sja-analytics-api 2>/dev/null)" = "healthy" ]; do sleep 2; done
+	@curl -s http://127.0.0.1:8300/api/health; echo
+
 .PHONY: prod-down
 prod-down: ## Stop the production stack
 	$(COMPOSE_PROD) down
+
+.PHONY: prod-logs
+prod-logs: ## Follow production logs
+	$(COMPOSE_PROD) logs -f
+
+.PHONY: prod-ps
+prod-ps: ## Show production container status
+	$(COMPOSE_PROD) ps
 
 .env:
 	@echo "No .env found - copy .env.example to .env first." && exit 1
