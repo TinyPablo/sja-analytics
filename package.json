@@ -1,0 +1,19 @@
+{
+  "name": "sja-analytics",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "apps/web",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace @sja/web",
+    "build": "npm run build --workspace @sja/web",
+    "lint": "npm run lint --workspace @sja/web",
+    "format": "prettier --write .",
+    "gen:types": "npm run gen --workspace @sja/api-types"
+  },
+  "devDependencies": {
+    "prettier": "^3.6.2"
+  }
+}
